@@ -1,0 +1,88 @@
+jobs:
+  stage_0_job_0:
+    name: tl-expected nav2-collision-monitor ros-gz-bridge kinematics-interface sdformat-urdf
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    needs: []
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Build ros-humble-tl-expected ros-humble-nav2-collision-monitor ros-humble-ros-gz-bridge
+        ros-humble-kinematics-interface ros-humble-sdformat-urdf
+      env:
+        ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+        CURRENT_RECIPES: ros-humble-tl-expected ros-humble-nav2-collision-monitor
+          ros-humble-ros-gz-bridge ros-humble-kinematics-interface ros-humble-sdformat-urdf
+        DOCKER_IMAGE: condaforge/linux-anvil-cos7-x86_64
+      run: |
+        export CI=azure
+        export GIT_BRANCH=$BUILD_SOURCEBRANCHNAME
+        export FEEDSTOCK_NAME=$(basename ${BUILD_REPOSITORY_NAME})
+        .scripts/run_docker_build.sh
+  stage_0_job_1:
+    name: ros-gz-sim
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    needs: []
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Build ros-humble-ros-gz-sim
+      env:
+        ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+        CURRENT_RECIPES: ros-humble-ros-gz-sim
+        DOCKER_IMAGE: condaforge/linux-anvil-cos7-x86_64
+      run: |
+        export CI=azure
+        export GIT_BRANCH=$BUILD_SOURCEBRANCHNAME
+        export FEEDSTOCK_NAME=$(basename ${BUILD_REPOSITORY_NAME})
+        .scripts/run_docker_build.sh
+  stage_1_job_2:
+    name: rsl ros-gz-image kinematics-interface-kdl
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    needs:
+    - stage_0_job_0
+    - stage_0_job_1
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Build ros-humble-rsl ros-humble-ros-gz-image ros-humble-kinematics-interface-kdl
+      env:
+        ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+        CURRENT_RECIPES: ros-humble-rsl ros-humble-ros-gz-image ros-humble-kinematics-interface-kdl
+        DOCKER_IMAGE: condaforge/linux-anvil-cos7-x86_64
+      run: |
+        export CI=azure
+        export GIT_BRANCH=$BUILD_SOURCEBRANCHNAME
+        export FEEDSTOCK_NAME=$(basename ${BUILD_REPOSITORY_NAME})
+        .scripts/run_docker_build.sh
+  stage_2_job_3:
+    name: ros-gz-sim-demos admittance-controller ros-gz
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    needs:
+    - stage_1_job_2
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Build ros-humble-ros-gz-sim-demos ros-humble-admittance-controller ros-humble-ros-gz
+      env:
+        ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+        CURRENT_RECIPES: ros-humble-ros-gz-sim-demos ros-humble-admittance-controller
+          ros-humble-ros-gz
+        DOCKER_IMAGE: condaforge/linux-anvil-cos7-x86_64
+      run: |
+        export CI=azure
+        export GIT_BRANCH=$BUILD_SOURCEBRANCHNAME
+        export FEEDSTOCK_NAME=$(basename ${BUILD_REPOSITORY_NAME})
+        .scripts/run_docker_build.sh
+name: build_linux
+on:
+  push:
+    branches:
+    - buildbranch_linux
